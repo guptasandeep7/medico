@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
                                             new AuthUI.IdpConfig.GoogleBuilder().build(),
                                             new AuthUI.IdpConfig.EmailBuilder().build()
                                     ))
-                                    .setLogo(R.drawable.logo)
+                                    .setLogo(R.drawable.logo2)
                                     .setTheme(R.style.Theme_Medico)
                                     .build(),
                             RC_SIGN_IN);
