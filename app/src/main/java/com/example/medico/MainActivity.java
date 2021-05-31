@@ -31,9 +31,20 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+
         mainLayout = (LinearLayout)findViewById(R.id.mainActivity);
         username_TextView = (TextView)findViewById(R.id.username);
         signoutButton = (Button)findViewById(R.id.signoutButton);
+
+        Button nextButton = (Button)findViewById(R.id.next);
+        nextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), HomeScreen.class);
+                startActivity(intent);
+            }
+        });
 
         mFirebaseAuth = FirebaseAuth.getInstance();
 
@@ -73,6 +84,9 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+
+
 
     }
 
