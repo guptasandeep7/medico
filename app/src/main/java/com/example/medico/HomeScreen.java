@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 public class HomeScreen extends AppCompatActivity {
 
     @Override
-    protected void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+    protected void onCreate(  Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.homescreen);
 
