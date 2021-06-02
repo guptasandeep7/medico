@@ -1,11 +1,5 @@
 package com.example.medico;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-
 import android.Manifest;
 import android.app.DatePickerDialog;
 import android.content.Intent;
@@ -19,11 +13,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
+import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
-    private static final int RC_SIGN_IN = 1;
+    private static final int RC_SIGN_IN = 3;
     private String mUsername;
     private TextView username_TextView;
     private Button signoutButton;
@@ -89,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
 
 
         mainLayout = (RelativeLayout)findViewById(R.id.relativeLayout);
-        username_TextView = (TextView)findViewById(R.id.username);
         signoutButton = (Button)findViewById(R.id.signoutButton);
 
         Button nextButton = (Button)findViewById(R.id.submitButton);
@@ -109,8 +108,10 @@ public class MainActivity extends AppCompatActivity {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
                     //sign in
+
                     onSignedINInisilise(user.getDisplayName());
                     mainLayout.setVisibility(View.VISIBLE);
+
 
                 } else {
                     //sign out
@@ -118,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                     startActivityForResult(
                             AuthUI.getInstance()
                                     .createSignInIntentBuilder()
-                                    .setIsSmartLockEnabled(false)
+                                    .setIsSmartLockEnabled(true)
                                     .setAvailableProviders(Arrays.asList(
                                             new AuthUI.IdpConfig.GoogleBuilder().build(),
                                             new AuthUI.IdpConfig.EmailBuilder().build()
@@ -198,27 +199,24 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode)
-        {
-            case 1:
-                if(resultCode == RESULT_OK){
-                    Uri selectedImageUri = data.getData();
-                    profilePic.setImageURI(selectedImageUri);
-                }
-                break;
-            case 2:
+        if(requestCode==1) {
+            if (resultCode == RESULT_OK) {
+                Uri selectedImageUri = data.getData();
+                profilePic.setImageURI(selectedImageUri);
+            }
+        }
+        else if(requestCode==2){
                 if(resultCode == RESULT_OK){
                     Bundle bundle = data.getExtras();
                     Bitmap bitmapImage = (Bitmap) bundle.get("data");
                     profilePic.setImageBitmap(bitmapImage);
                 }
-                break;
-
         }
-        if (requestCode == RC_SIGN_IN) {
+        else if(requestCode == RC_SIGN_IN) {
             if (resultCode == RESULT_OK) {
                 Toast.makeText(MainActivity.this, "You Successfully Signed In", Toast.LENGTH_SHORT).show();
-            } else if (resultCode == RESULT_CANCELED) {
+            }
+            else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(MainActivity.this, "Sign In Canceled", Toast.LENGTH_SHORT).show();
                 finish();
             }
@@ -267,14 +265,19 @@ public class MainActivity extends AppCompatActivity {
     private void onSignedOutInisilise() {
 
         mUsername = "Unknown";
-        username_TextView.setText(mUsername);
 
     }
 
     private void onSignedINInisilise(String username) {
 
         mUsername = username;
-        username_TextView.setText(mUsername);
+        EditText editText = (EditText)findViewById(R.id.name);
+        editText.setText(mUsername);
+//        Glide.with(getApplicationContext())
+//                .load(photoUrl)
+//                .asBitmap()
+//                .centerCrop()
+//                .into(profilePic);
 
     }
 
