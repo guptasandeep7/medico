@@ -18,10 +18,12 @@
         android:layout_height="wrap_content"
         android:contentDescription="@string/app_name"
         tools:context=".MainActivity"
+        android:visibility="invisible"
         >
 
 
-        <ImageView
+
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/profilePic"
             android:layout_width="150dp"
             android:layout_height="150dp"
@@ -31,8 +33,9 @@
             android:layout_marginStart="50dp"
             android:layout_marginLeft="50dp"
             android:layout_marginTop="50dp"
-            android:contentDescription="@string/desc"
-            android:src="@drawable/pictures" />
+            android:src="@drawable/logi"
+            android:scaleType="centerCrop"
+            app:shapeAppearance="@style/ShapeAppearance.App.CircleImageView"/> />
 
         <Button
             android:id="@+id/updatePic"
@@ -53,7 +56,7 @@
             android:layout_marginTop="16dp"
             android:autofillHints="@string/name"
             android:hint="@string/name"
-            android:inputType="text" />
+            android:inputType="textPersonName" />
 
 
         <RadioGroup
@@ -107,7 +110,7 @@
             android:layout_marginLeft="40dp"
             android:layout_marginTop="16dp"
             android:text="@string/gender"
-            android:textSize="25sp" />
+            android:textSize="20sp" />
 
         <TextView
             android:id="@+id/txtDate"
@@ -117,7 +120,7 @@
             android:layout_marginTop="16dp"
             android:layout_marginLeft="200dp"
             android:text="@string/dd_mm_yyyy"
-            android:textSize="25sp"
+            android:textSize="20sp"
 
             />
 
@@ -168,16 +171,8 @@
 
 
 
-    <TextView
-        android:id="@+id/username"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hi, name!"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+
+
     <Button
         android:id="@+id/signoutButton"
         android:layout_width="wrap_content"
