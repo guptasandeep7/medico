@@ -2,6 +2,7 @@ package com.example.medico;
 
 import android.Manifest;
 import android.app.DatePickerDialog;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -15,6 +16,7 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RadioButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,20 +28,39 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
 
-
+EditText profession;
+EditText mobileNumber;
+EditText name;
     TextView txtDate;
     Calendar c;
     DatePickerDialog dpd;
     Button updatePic;
     ImageView profilePic;
+    Button submitButton;
+    Uri selectedImageUri;
+    EditText address;
+    RadioButton male;
+    RadioButton female;
+    RadioButton others;
+    Uri my_uri;
+
 
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
@@ -48,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView username_TextView;
     private Button signoutButton;
     private RelativeLayout mainLayout;
+    StorageReference photoref;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +79,11 @@ public class MainActivity extends AppCompatActivity {
         txtDate=findViewById(R.id.txtDate);
         profilePic=findViewById(R.id.profilePic);
         updatePic=findViewById(R.id.updatePic);
+        male=findViewById(R.id.male);
+        female=findViewById(R.id.female);
+        others=findViewById(R.id.others);
+        submitButton=findViewById(R.id.submitButton);
+
         txtDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -84,21 +111,23 @@ public class MainActivity extends AppCompatActivity {
                 chooseProfilePicture();
             }
         });
+        submitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
+
+                uploadtofirebase();
+
+            }
+        });
         //sushant's code
 
 
         mainLayout = (RelativeLayout)findViewById(R.id.relativeLayout);
         signoutButton = (Button)findViewById(R.id.signoutButton);
 
-        Button nextButton = (Button)findViewById(R.id.submitButton);
-        nextButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), HomeScreen.class);
-                startActivity(intent);
-            }
-        });
+
+
 
         mFirebaseAuth = FirebaseAuth.getInstance();
 
@@ -144,6 +173,86 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    }
+
+    private void uploadtofirebase() {
+        ProgressDialog dialog=new ProgressDialog(this);
+        dialog.setMessage("File Uploader");
+        dialog.show();
+        FirebaseStorage storage=FirebaseStorage.getInstance();
+
+        StorageReference uploader=storage.getReference().child("profile");
+        photoref=uploader.child(selectedImageUri.getLastPathSegment());
+        photoref.putFile(selectedImageUri)
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        dialog.dismiss();
+                        Toast.makeText(getApplicationContext(), "File uploaded", Toast.LENGTH_LONG).show();
+                        photoref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                my_uri=uri;
+
+                                profession=(EditText)findViewById(R.id.profession);
+                                mobileNumber=(EditText)findViewById(R.id.mobileNumber);
+                                address=(EditText)findViewById(R.id.address);
+                                name=(EditText)findViewById(R.id.name);
+                                String s1=male.getText().toString();
+                                String s2=female.getText().toString();
+                                String s3=others.getText().toString();
+
+                                String pro=profession.getText().toString().trim();
+                                String num=mobileNumber.getText().toString().trim();
+                                String addr=address.getText().toString().trim();
+                                String date=txtDate.getText().toString().trim();
+                                String nam=name.getText().toString().trim();
+                                String s;
+                                String photourl=my_uri.toString();
+                                if(male.isChecked()) {
+                                    s=s1;
+                                }
+                                else if(female.isChecked()){
+                                    s=s2;
+                                }
+                                else
+                                {
+                                    s=s3;
+                                }
+                                dataholder obj=new dataholder(pro,num,addr,date,nam,s,photourl);
+
+                                FirebaseDatabase db=FirebaseDatabase.getInstance();
+                                DatabaseReference node=db.getReference("user");
+                                node.push().setValue(obj);
+                                profession.setText("");
+                                mobileNumber.setText("");
+                                address.setText("");
+                                txtDate.setText("");
+                                name.setText("");
+                                Toast.makeText(getApplicationContext(),"value Inserted",Toast.LENGTH_LONG).show();
+                                Intent intent=new Intent(MainActivity.this,HomeScreen.class);
+                                startActivity(intent);
+                                finish();
+
+                            }
+                        });
+
+
+
+
+
+                    }
+
+
+
+                })
+                .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onProgress(@NonNull @NotNull UploadTask.TaskSnapshot snapshot) {
+                        float percentage =(100*snapshot.getBytesTransferred())/snapshot.getTotalByteCount();
+                        dialog.setMessage("Uploaded : "+(int)percentage+" %");
+                    }
+                });
     }
 
     //second copy of sushant
@@ -201,16 +310,16 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode==1) {
             if (resultCode == RESULT_OK) {
-                Uri selectedImageUri = data.getData();
+                 selectedImageUri = data.getData();
                 profilePic.setImageURI(selectedImageUri);
             }
         }
         else if(requestCode==2){
-                if(resultCode == RESULT_OK){
-                    Bundle bundle = data.getExtras();
-                    Bitmap bitmapImage = (Bitmap) bundle.get("data");
-                    profilePic.setImageBitmap(bitmapImage);
-                }
+            if(resultCode == RESULT_OK){
+                Bundle bundle = data.getExtras();
+                Bitmap bitmapImage = (Bitmap) bundle.get("data");
+                profilePic.setImageBitmap(bitmapImage);
+            }
         }
         else if(requestCode == RC_SIGN_IN) {
             if (resultCode == RESULT_OK) {
@@ -267,6 +376,7 @@ public class MainActivity extends AppCompatActivity {
         mUsername = "Unknown";
 
     }
+
 
     private void onSignedINInisilise(String username) {
 
