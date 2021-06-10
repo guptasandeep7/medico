@@ -28,11 +28,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnCanceledListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
@@ -40,6 +45,7 @@ import com.google.firebase.storage.UploadTask;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Calendar;
 
@@ -54,7 +60,7 @@ EditText name;
     Button updatePic;
     ImageView profilePic;
     Button submitButton;
-    Uri selectedImageUri;
+    Uri selectedImageUri = null;
     EditText address;
     RadioButton male;
     RadioButton female;
@@ -62,6 +68,11 @@ EditText name;
     Uri my_uri;
 
 
+
+    private static String patientId;
+    public static String getPatientId() {
+        return patientId;
+    }
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
     private static final int RC_SIGN_IN = 3;
@@ -70,6 +81,10 @@ EditText name;
     private Button signoutButton;
     private RelativeLayout mainLayout;
     StorageReference photoref;
+
+    public MainActivity() throws FileNotFoundException {
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -124,6 +139,7 @@ EditText name;
 
 
         mainLayout = (RelativeLayout)findViewById(R.id.relativeLayout);
+        TextView loading = (TextView)findViewById(R.id.loading);
         signoutButton = (Button)findViewById(R.id.signoutButton);
 
 
@@ -139,7 +155,32 @@ EditText name;
                     //sign in
 
                     onSignedINInisilise(user.getDisplayName());
-                    mainLayout.setVisibility(View.VISIBLE);
+                    patientId = user.getUid();
+
+                    FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+                    DatabaseReference databaseReference = firebaseDatabase.getReference().child("user");
+                    databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                            if(snapshot.hasChild(patientId)){
+                                mainLayout.setVisibility(View.INVISIBLE);
+                                Intent intent = new Intent(MainActivity.this, HomeScreen.class);
+                                startActivity(intent);
+                                finish();
+                            }
+                            else{
+                                mainLayout.setVisibility(View.VISIBLE);
+                                loading.setVisibility(View.GONE);
+
+
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+                        }
+                    });
 
 
                 } else {
@@ -176,13 +217,37 @@ EditText name;
     }
 
     private void uploadtofirebase() {
-        ProgressDialog dialog=new ProgressDialog(this);
+        ProgressDialog dialog = new ProgressDialog(this);
         dialog.setMessage("File Uploader");
         dialog.show();
-        FirebaseStorage storage=FirebaseStorage.getInstance();
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        profession = (EditText) findViewById(R.id.profession);
+        mobileNumber = (EditText) findViewById(R.id.mobileNumber);
+        address = (EditText) findViewById(R.id.address);
+        name = (EditText) findViewById(R.id.name);
+        String s1 = male.getText().toString();
+        String s2 = female.getText().toString();
+        String s3 = others.getText().toString();
 
-        StorageReference uploader=storage.getReference().child("profile");
-        photoref=uploader.child(selectedImageUri.getLastPathSegment());
+        String pro = profession.getText().toString().trim();
+        String num = mobileNumber.getText().toString().trim();
+        String addr = address.getText().toString().trim();
+        String date = txtDate.getText().toString().trim();
+        String nam = name.getText().toString().trim();
+        String s;
+        if (male.isChecked()) {
+            s = s1;
+        } else if (female.isChecked()) {
+            s = s2;
+        } else {
+            s = s3;
+        }
+        FirebaseDatabase db = FirebaseDatabase.getInstance();
+
+        if (selectedImageUri != null) {
+
+        StorageReference uploader = storage.getReference().child("profile");
+        photoref = uploader.child(selectedImageUri.getLastPathSegment());
         photoref.putFile(selectedImageUri)
                 .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
@@ -192,67 +257,108 @@ EditText name;
                         photoref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                             @Override
                             public void onSuccess(Uri uri) {
-                                my_uri=uri;
+                                my_uri = uri;
 
-                                profession=(EditText)findViewById(R.id.profession);
-                                mobileNumber=(EditText)findViewById(R.id.mobileNumber);
-                                address=(EditText)findViewById(R.id.address);
-                                name=(EditText)findViewById(R.id.name);
-                                String s1=male.getText().toString();
-                                String s2=female.getText().toString();
-                                String s3=others.getText().toString();
+                                String photourl = my_uri.toString();
 
-                                String pro=profession.getText().toString().trim();
-                                String num=mobileNumber.getText().toString().trim();
-                                String addr=address.getText().toString().trim();
-                                String date=txtDate.getText().toString().trim();
-                                String nam=name.getText().toString().trim();
-                                String s;
-                                String photourl=my_uri.toString();
-                                if(male.isChecked()) {
-                                    s=s1;
-                                }
-                                else if(female.isChecked()){
-                                    s=s2;
-                                }
-                                else
-                                {
-                                    s=s3;
-                                }
-                                dataholder obj=new dataholder(pro,num,addr,date,nam,s,photourl);
+                                dataholder obj = new dataholder(pro, num, addr, date, nam, s, photourl,patientId);
+                                DatabaseReference node = db.getReference().child("user").child(patientId);
+                                node.setValue(obj).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void unused) {
+                                        dialog.dismiss();
+                                        profession.setText("");
+                                        mobileNumber.setText("");
+                                        address.setText("");
+                                        txtDate.setText("");
+                                        name.setText("");
+                                        Toast.makeText(getApplicationContext(), "value Inserted", Toast.LENGTH_LONG).show();
+                                        Intent intent = new Intent(MainActivity.this, HomeScreen.class);
+                                        startActivity(intent);
+                                        finish();
+                                    }
+                                }).addOnCanceledListener(new OnCanceledListener() {
+                                    @Override
+                                    public void onCanceled() {
+                                        Toast.makeText(getApplicationContext(), "Canceled", Toast.LENGTH_LONG).show();
 
-                                FirebaseDatabase db=FirebaseDatabase.getInstance();
-                                DatabaseReference node=db.getReference("user");
-                                node.push().setValue(obj);
-                                profession.setText("");
-                                mobileNumber.setText("");
-                                address.setText("");
-                                txtDate.setText("");
-                                name.setText("");
-                                Toast.makeText(getApplicationContext(),"value Inserted",Toast.LENGTH_LONG).show();
-                                Intent intent=new Intent(MainActivity.this,HomeScreen.class);
-                                startActivity(intent);
-                                finish();
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull @NotNull Exception e) {
+                                        Toast.makeText(getApplicationContext(), "Failed", Toast.LENGTH_LONG).show();
+
+                                    }
+                                });
+
+
 
                             }
                         });
 
 
-
-
-
                     }
-
 
 
                 })
                 .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
                     @Override
                     public void onProgress(@NonNull @NotNull UploadTask.TaskSnapshot snapshot) {
-                        float percentage =(100*snapshot.getBytesTransferred())/snapshot.getTotalByteCount();
-                        dialog.setMessage("Uploaded : "+(int)percentage+" %");
+                        float percentage = (100 * snapshot.getBytesTransferred()) / snapshot.getTotalByteCount();
+                        dialog.setMessage("Uploaded : " + (int) percentage + " %");
                     }
-                });
+                }).addOnCanceledListener(new OnCanceledListener() {
+            @Override
+            public void onCanceled() {
+                Toast.makeText(getApplicationContext(), "Photo Update Canceled", Toast.LENGTH_LONG).show();
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull @NotNull Exception e) {
+                Toast.makeText(getApplicationContext(), "Photo update Failed", Toast.LENGTH_LONG).show();
+
+            }
+        });
+    }
+        else {
+
+
+            dataholder obj = new dataholder(pro, num, addr, date, nam, s,null,patientId);
+            DatabaseReference node = db.getReference().child("user").child(patientId);
+            node.setValue(obj).addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void unused) {
+                    dialog.dismiss();
+                    profession.setText("");
+                    mobileNumber.setText("");
+                    address.setText("");
+                    txtDate.setText("");
+                    name.setText("");
+                    Toast.makeText(getApplicationContext(), "value Inserted", Toast.LENGTH_LONG).show();
+                    Intent intent = new Intent(MainActivity.this, HomeScreen.class);
+                    startActivity(intent);
+                    finish();
+                }
+            }).addOnCanceledListener(new OnCanceledListener() {
+                @Override
+                public void onCanceled() {
+                    Toast.makeText(getApplicationContext(), "Canceled", Toast.LENGTH_LONG).show();
+
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull @NotNull Exception e) {
+                    Toast.makeText(getApplicationContext(), "Failed", Toast.LENGTH_LONG).show();
+
+                }
+            });
+
+
+        }
+
+
+
     }
 
     //second copy of sushant

@@ -1,9 +1,9 @@
 package com.example.medico;
 
 public class dataholder {
-    String profession,number,address,date,name,gender,uri;
+    String profession,number,address,date,name,gender,uri,patientId;
 
-    public dataholder(String profession, String number, String address,String date,String name,String gender,String uri) {
+    public dataholder(String profession, String number, String address,String date,String name,String gender,String uri,String patientId) {
         this.profession = profession;
         this.number = number;
         this.address = address;
@@ -11,6 +11,19 @@ public class dataholder {
         this.name=name;
         this.gender=gender;
         this.uri=uri;
+        this.patientId = patientId;
+
+    }
+
+    public dataholder(){
+
+    }
+    public String getPatientId() {
+        return patientId;
+    }
+
+    public void setPatientId(String patientId) {
+        this.patientId = patientId;
     }
 
     public String getUri() {
