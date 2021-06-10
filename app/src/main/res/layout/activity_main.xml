@@ -7,9 +7,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:layout_height="wrap_content"
+    android:fillViewport="true"
+    tools:context=".MainActivity"
+    >
 
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
 
 
     <RelativeLayout
@@ -17,7 +23,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:contentDescription="@string/app_name"
-        tools:context=".MainActivity"
         android:visibility="invisible"
         >
 
@@ -35,7 +40,7 @@
             android:layout_marginTop="50dp"
             android:src="@drawable/logi"
             android:scaleType="centerCrop"
-            app:shapeAppearance="@style/ShapeAppearance.App.CircleImageView"/> />
+            app:shapeAppearance="@style/ShapeAppearance.App.CircleImageView"/>
 
         <Button
             android:id="@+id/updatePic"
@@ -173,6 +178,7 @@
 
 
 
+
     <Button
         android:id="@+id/signoutButton"
         android:layout_width="wrap_content"
@@ -181,7 +187,22 @@
         android:layout_alignParentRight="true"
         />
 
-
     </RelativeLayout>
+
+        <TextView
+            android:id="@+id/loading"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Verifying User ..."
+            android:textSize="40dp"
+            android:layout_centerInParent="true"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:textColor="?colorPrimary"
+            />
+
+</RelativeLayout>
+
+
 
 </ScrollView>
